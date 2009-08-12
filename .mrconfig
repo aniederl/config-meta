@@ -1,0 +1,9 @@
+
+[vim]
+checkout = git clone 'git://github.com/aniederl/config-vim.git' 'vim'
+
+[vim-plugins]
+checkout = git clone 'git://github.com/aniederl/config-vim-plugins.git' 'vim/plugins'
+
+[zsh]
+checkout = git clone 'git://github.com/aniederl/config-zsh.git' 'zsh'

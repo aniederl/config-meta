@@ -1,0 +1,48 @@
+#!/bin/sh
+
+GET=wget
+GET_MV_OPT=-O
+
+MR_HEAD="http://git.kitenet.net/?p=mr.git;a=blob;f=mr;hb=HEAD"
+
+
+TOPDIR="`dirname ${0}`/.."
+
+if [ ! -x "`which git`" ] ; then
+	echo "git not found, aborting."
+	exit 1
+fi
+
+PERL=`which perl`
+if [ ! -x "${PERL}" ] ; then
+	echo "perl not found, aborting."
+	exit 1
+fi
+
+MR=`which mr`
+if [ ! -x "${MR}" ] ; then
+	cd "${TOPDIR}/bin"
+	"${GET}" "${MR_HEAD}"
+
+	MR="bin/mr"
+fi
+
+cd "${TOPDIR}"
+"${MR}" checkout
+
+
+if echo "${TOPDIR}" | grep "${HOME}" ; then
+	while read link_settings ; do
+		link_src="${TOPDIR}/`echo ${link_settings} | awk '{ print $1 }'`"
+		link_dst="  ${HOME}/`echo ${link_settings} | awk '{ print $2 }'`"
+
+		if [ -e "${link_dst}" ] ; then
+			echo "${link_dst} already exists. Continuing."
+		else
+			ln -s "${link_src}" "${link_dst}"
+		fi
+	done < "${TOPDIR}/.link_table"
+fi
+
+
+echo "Done."
