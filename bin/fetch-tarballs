@@ -1,0 +1,66 @@
+#!/bin/sh
+
+GET=wget
+GET_MV_OPT=-O
+
+ZCAT=zcat
+
+
+TOPDIR="`dirname ${0}`/.."
+
+if [ ! -x "`which ${GET}`" ] ; then
+	echo "${GET} not found, aborting."
+	exit 1
+fi
+
+if [ ! -x "`which ${ZCAT}`" ] ; then
+	ZCAT=gzcat
+	if [ ! -x "`which ${ZCAT}`" ] ; then
+		echo "zcat not found, aborting."
+		exit 1
+	fi
+fi
+
+if [ ! -x "`which tar`" ] ; then
+	echo "tar not found, aborting."
+	exit 1
+fi
+
+
+cd "${TOPDIR}"
+
+mkdir dl
+cd dl
+
+fgrep checkout .mrconfig | \
+while read mr_settings ; do
+	repo_owner="`echo ${mr_settings} | sed -ne 's@^.*git://github\.com/\([^/]*\)/.*\.git.*$@\1@p'`"
+	repo_name=" `echo ${mr_settings} | sed -ne 's@^.*git://github\.com/[^/]*/\(.*\)\.git.*$@\1@p'`"
+	tarball_dir=`echo ${mr_settings} | sed -ne "s:^.*\.git' '\(.*\)'$:\1:p"`
+	tarball_uri="http://github.com/${repo_owner}/${repo_name}/tarball/master"
+
+	"${GET}" "${tarball_uri}"
+
+	tarball="`ls ${repo_owner}-${repo_name}*`"
+	"${ZCAT}" "${tarball}" | tar -xv
+
+	mv "${tarball%.tar.gz}"/* "${tarball_dir}"/
+	rm -rf "${tarball%.tar.gz}"
+done
+
+
+if echo "${TOPDIR}" | grep "${HOME}" ; then
+	while read link_settings ; do
+		link_src="${TOPDIR}/`echo ${link_settings} | awk '{ print $1 }'`"
+		link_dst="  ${HOME}/`echo ${link_settings} | awk '{ print $2 }'`"
+
+		if [ -e "${link_dst}" ] ; then
+			echo "${link_dst} already exists. Continuing."
+		else
+			ln -s "${link_src}" "${link_dst}"
+		fi
+	done < "${TOPDIR}/.link_table"
+fi
+
+
+echo "Done."
