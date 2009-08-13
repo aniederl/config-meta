@@ -30,6 +30,8 @@ fi
 cd "${TOPDIR}"
 "${MR}" checkout
 
+[ -x "${TOPDIR}"/vim/bin/init ] && "${TOPDIR}"/vim/bin/init
+
 
 if echo "${TOPDIR}" | grep "${HOME}" ; then
 	while read link_settings ; do
